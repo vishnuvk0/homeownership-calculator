@@ -160,6 +160,71 @@
             }).format(value);
         }
 
+        function createCumulativeChart(data) {
+            const ctx = document.getElementById('cumulativeChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.months,
+                    datasets: [
+                        {
+                            label: 'Cumulative Rent (No Buy)',
+                            data: data.cumulative_rent,
+                            borderColor: 'rgb(255, 99, 132)',
+                            fill: false
+                        },
+                        {
+                            label: 'Cumulative Home Cost',
+                            data: data.cumulative_home_cost,
+                            borderColor: 'rgb(54, 162, 235)',
+                            fill: false
+                        },
+                        {
+                            label: 'Investment Value',
+                            data: data.cumulative_investment,
+                            borderColor: 'rgb(75, 192, 192)',
+                            fill: false
+                        },
+                        {
+                            label: 'Home Equity',
+                            data: data.cumulative_equity,
+                            borderColor: 'rgb(153, 102, 255)',
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Month'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         function displayResults(result) {
             const resultsDiv = document.getElementById('results');
             
@@ -211,11 +276,18 @@
                     <div class="col-md-6">
                         <div class="card mb-4">
                             <div class="card-header">
-                                <h3 class="mb-0">Rent Comparison</h3>
+                                <h3 class="mb-0">Monthly Payment Breakdown</h3>
                             </div>
                             <div class="card-body">
-                                <p>Total Rent (if never bought): ${formatCurrency(result.rent_comparison.total_rent_no_buy)}</p>
-                                <p>Monthly Mortgage Payment: ${formatCurrency(result.rent_comparison.monthly_payment)}</p>
+                                <p>Base Mortgage Payment: ${formatCurrency(result.rent_comparison.monthly_payment)}</p>
+                                <p>Monthly Property Tax: ${formatCurrency(result.monthly_costs.property_tax)}</p>
+                                <p>Monthly Insurance: ${formatCurrency(result.monthly_costs.insurance)}</p>
+                                <p>Monthly Maintenance: ${formatCurrency(result.monthly_costs.maintenance)}</p>
+                                <p>Monthly HOA: ${formatCurrency(result.monthly_costs.hoa)}</p>
+                                <hr>
+                                <p><strong>Total Monthly Cost: ${formatCurrency(result.monthly_costs.total)}</strong></p>
+                                <p>Monthly Tax Savings: ${formatCurrency(result.monthly_costs.tax_savings)}</p>
+                                <p><strong>Net Monthly Cost: ${formatCurrency(result.monthly_costs.total - result.monthly_costs.tax_savings)}</strong></p>
                             </div>
                         </div>
                     </div>
@@ -223,13 +295,69 @@
                     <div class="col-md-6">
                         <div class="card mb-4">
                             <div class="card-header">
-                                <h3 class="mb-0">Investment Analysis</h3>
+                                <h3 class="mb-0">Rental Income Analysis</h3>
                             </div>
                             <div class="card-body">
-                                <p>Monthly Investment Value: ${formatCurrency(result.investment_analysis.monthly_investment_value)}</p>
-                                <p>Rent Investment Value: ${formatCurrency(result.investment_analysis.rent_investment_value)}</p>
+                                <p>Monthly Rent Collected (when renting out): ${formatCurrency(result.rental_analysis.monthly_rent_collected)}</p>
+                                <p>Monthly Rent Paid (when moved out): ${formatCurrency(result.rental_analysis.monthly_rent_paid)}</p>
+                                <p>Monthly Net Rental Income: ${formatCurrency(result.rental_analysis.monthly_net_income)}</p>
+                                <hr>
+                                <p>Total Months Renting Out: ${result.rental_analysis.total_months_renting}</p>
+                                <p>Total Rental Income: ${formatCurrency(result.rental_analysis.total_rental_income)}</p>
+                                <p>Total Rent Paid While Out: ${formatCurrency(result.rental_analysis.total_rent_paid_out)}</p>
+                                <p><strong>Total Net Rental Income: ${formatCurrency(result.rental_analysis.net_rental_income)}</strong></p>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3 class="mb-0">Tax Savings Analysis</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Year</th>
+                                        <th>Mortgage Interest</th>
+                                        <th>Property Tax</th>
+                                        <th>Total Deductions</th>
+                                        <th>Tax Savings</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${result.tax_analysis.yearly_savings.map(year => `
+                                        <tr>
+                                            <td>${year.year}</td>
+                                            <td>${formatCurrency(year.mortgage_interest)}</td>
+                                            <td>${formatCurrency(year.property_tax)}</td>
+                                            <td>${formatCurrency(year.total_deductions)}</td>
+                                            <td>${formatCurrency(year.tax_savings)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th>Total</th>
+                                        <th>${formatCurrency(result.tax_analysis.total_mortgage_interest)}</th>
+                                        <th>${formatCurrency(result.tax_analysis.total_property_tax)}</th>
+                                        <th>${formatCurrency(result.tax_analysis.total_deductions)}</th>
+                                        <th>${formatCurrency(result.tax_analysis.total_tax_savings)}</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3 class="mb-0">Cumulative Cost Analysis</h3>
+                    </div>
+                    <div class="card-body" style="height: 600px;">
+                        <canvas id="cumulativeChart"></canvas>
                     </div>
                 </div>
 
@@ -385,6 +513,9 @@
                     }
                 }
             });
+
+            // Create the cumulative chart
+            createCumulativeChart(result.graph_data);
         }
 
         document.getElementById('simulationForm').addEventListener('submit', async (e) => {
