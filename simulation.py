@@ -163,7 +163,7 @@ def simulate_scenario(
     # Calculate monthly mortgage payment for display
     monthly_payment = property_costs.calculate_monthly_payment(mortgage_rate_annual)
     
-    # Display monthly payments with the calculated savings
+    # Display monthly payments with the calculated average costs
     display_monthly_payments(
         property_costs,
         monthly_payment,
@@ -171,5 +171,16 @@ def simulate_scenario(
         monthly_savings_rent,
         rent_while_out,
         mortgage_rate_annual,
-        rent_collected_home
+        rent_collected_home,
+        home_price,
+        closing_costs_buy_pct,
+        total_monthly_paid,
+        months_rent_out,
+        home_value_after,
+        closing_costs_sell_pct,
+        final_equity,
+        total_months,
+        total_rent_no_buy,
+        fv_invest_if_rent,
+        property_costs.down_payment
     ) 

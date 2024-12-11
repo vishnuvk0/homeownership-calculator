@@ -119,40 +119,51 @@ def display_monthly_payments(
     monthly_savings_rent,
     rent_while_out,
     mortgage_rate_annual,
-    rent_collected_home
+    rent_collected_home,
+    home_price,
+    closing_costs_buy_pct,
+    total_monthly_paid,
+    months_rent_out,
+    home_value_after,
+    closing_costs_sell_pct,
+    final_equity,
+    total_months,
+    total_rent_no_buy,
+    fv_invest_if_rent,
+    down_payment
 ):
     """Display the monthly payment breakdown."""
-    print("\n--------------- MONTHLY PAYMENT BREAKDOWN ---------------")
+    print("\n--------------- AVERAGE MONTHLY COST COMPARISON ---------------")
     
-    monthly_principal, monthly_interest = property_costs.calculate_monthly_mortgage_split(
-        property_costs.loan_amount, mortgage_rate_annual)
+    # Calculate total cost of ownership including everything
+    total_ownership_cost = (
+        down_payment +  # Initial down payment
+        (home_price * closing_costs_buy_pct) +  # Buying closing costs
+        total_monthly_paid +  # All monthly payments
+        (rent_while_out * months_rent_out) -  # Rent paid while renting out
+        (rent_collected_home * months_rent_out) +  # Rent collected
+        (home_value_after * closing_costs_sell_pct) -  # Selling costs
+        final_equity  # Final equity after selling
+    )
     
-    monthly_tax_insurance = (property_costs.property_tax_annual/12 + 
-                           property_costs.insurance_annual/12)
-    monthly_maintenance = property_costs.maintenance_annual/12
-    monthly_hoa = property_costs.hoa_monthly
-
-    payment_breakdown = [
-        ["Principal", f"${monthly_principal:,.2f}"],
-        ["Interest", f"${monthly_interest:,.2f}"],
-        ["Property Tax + Insurance", f"${monthly_tax_insurance:,.2f}"],
-        ["Maintenance", f"${monthly_maintenance:,.2f}"],
-        ["HOA", f"${monthly_hoa:,.2f}"],
-        ["", ""],
-        ["Total Monthly Payment", f"${monthly_payment:,.2f}"]
+    avg_monthly_ownership = total_ownership_cost / total_months
+    
+    # Calculate effective monthly cost of renting
+    total_renting_cost = (
+        total_rent_no_buy -  # Total rent paid
+        (fv_invest_if_rent - down_payment)  # Investment gains from down payment and monthly differences
+    )
+    
+    avg_monthly_renting = total_renting_cost / total_months
+    
+    comparison = [
+        ["Average Monthly Cost of Ownership", f"${avg_monthly_ownership:,.2f}"],
+        ["Average Monthly Cost of Renting", f"${avg_monthly_renting:,.2f}"],
     ]
     
-    if monthly_savings_buy != 0:
-        payment_breakdown.append(["Monthly Savings vs Renting", f"${monthly_savings_buy:,.2f}"])
+    print(tabulate(comparison, tablefmt="pretty"))
     
-    if rent_while_out > 0:
-        net_cashflow = rent_collected_home - monthly_payment - rent_while_out
-        payment_breakdown.extend([
-            ["", ""],
-            ["When Renting Out:", ""],
-            ["Rent Collected", f"${rent_collected_home:,.2f}"],
-            ["Your Rent Payment", f"-${rent_while_out:,.2f}"],
-            ["Net Monthly Cash Flow", f"${net_cashflow:,.2f}"]
-        ])
-    
-    print(tabulate(payment_breakdown, tablefmt="pretty")) 
+    if avg_monthly_ownership < avg_monthly_renting:
+        print("\nBuying appears to be more cost-effective on a monthly basis")
+    else:
+        print("\nRenting appears to be more cost-effective on a monthly basis") 
