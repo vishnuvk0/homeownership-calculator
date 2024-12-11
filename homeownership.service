@@ -1,0 +1,13 @@
+[Unit]
+Description=Home Ownership Calculator
+After=network.target
+
+[Service]
+User=www-data
+WorkingDirectory=/testapp/homeownership-calculator
+Environment="PATH=/testapp/homeownership-calculator/venv/bin"
+ExecStart=/testapp/homeownership-calculator/venv/bin/python app.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target 
