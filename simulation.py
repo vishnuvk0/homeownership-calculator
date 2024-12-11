@@ -32,11 +32,17 @@ def simulate_scenario(
         home_price, down_payment_pct, mortgage_rate_annual, mortgage_term_years,
         property_tax_rate_annual, maintenance_annual, insurance_annual, hoa_monthly
     )
+    property_costs.mortgage_rate_annual = mortgage_rate_annual
 
-    # Initialize rental scenario
+    # Initialize rental scenario with proper rent values even when not renting out
     rental_scenario = RentalScenario(
-        property_costs, months_live_in, months_rent_out,
-        rent_while_out, rent_collected_home, rent_growth_annual
+        property_costs, 
+        months_live_in, 
+        months_rent_out,
+        rent_while_out if months_rent_out > 0 else 0,  # Only set if renting out
+        rent_collected_home if months_rent_out > 0 else 0,  # Only set if renting out
+        rent_growth_annual,
+        rent_current
     )
 
     total_months = months_live_in + months_rent_out
@@ -55,6 +61,10 @@ def simulate_scenario(
     alt_invest_monthly_rate = (1 + alt_invest_growth_annual)**(1/12) - 1
     monthly_invest_monthly_rate = (1 + monthly_invest_growth_annual)**(1/12) - 1
 
+    # Calculate monthly savings for buying vs renting
+    monthly_savings_buy = 0  # Initialize savings variables
+    monthly_savings_rent = 0
+    
     # Process each month
     for m in range(1, total_months + 1):
         # Calculate mortgage split
@@ -67,17 +77,28 @@ def simulate_scenario(
         cash_flow = rental_scenario.calculate_monthly_cashflow(m)
 
         # Tax calculations
-        monthly_deductible = min(interest_paid + property_costs.property_tax,
+        monthly_deductible = min(interest_paid + property_costs.property_tax_annual/12,
                                property_tax_deduction_cap/12)
         tax_saving_this_month = monthly_deductible * tax_rate
+    
+        # Calculate monthly savings
+        if m <= months_live_in:
+            # During living in period, savings is the difference between rent we would pay and home costs
+            monthly_savings_buy = rental_scenario.monthly_rent_if_no_buy[m-1] - month_home_cost
+            monthly_savings_rent = 0
+        else:
+            # During rental period, savings includes rental income minus costs and rent paid elsewhere
+            monthly_savings_buy = cash_flow
+            monthly_savings_rent = 0
 
         # Investment calculations
-        rent_if_no_buy = rental_scenario.monthly_rent_if_no_buy[m-1]
-        if m <= months_live_in:
-            monthly_non_principal_expenses = (month_home_cost - principal_paid)
-            invest_contribution = max(0, monthly_non_principal_expenses - rent_if_no_buy)
-        else:
-            invest_contribution = max(0, -cash_flow - rent_if_no_buy)
+        monthly_total_cost = (principal_paid + interest_paid + 
+                             property_costs.property_tax_annual/12 + 
+                             property_costs.maintenance_annual/12 + 
+                             property_costs.insurance_annual/12 + 
+                             property_costs.hoa_monthly - 
+                             tax_saving_this_month)
+        invest_contribution = max(0, monthly_total_cost - rental_scenario.monthly_rent_if_no_buy[m-1])
 
         # Home value and equity calculations
         month_fraction_years = m/12
@@ -100,7 +121,9 @@ def simulate_scenario(
 
     total_monthly_paid = sum(monthly_total_home_cost)
     total_tax_savings = sum(monthly_tax_savings)
-    total_rent_no_buy = sum(rental_scenario.monthly_rent_if_no_buy)
+    total_rent_no_buy = sum(rental_scenario.monthly_rent_if_no_buy[:months_live_in])
+    if months_rent_out > 0:
+        total_rent_no_buy += sum(rental_scenario.monthly_rent_if_no_buy[months_live_in:])
 
     # Investment calculations
     fv_monthly_invest = calculate_future_monthly_investments(
@@ -127,7 +150,7 @@ def simulate_scenario(
         total_tax_savings, net_cost_after_selling, total_rent_no_buy,
         fv_monthly_invest, fv_invest_if_rent, owning_effective_net,
         renting_effective_net, monthly_principal_paid, monthly_interest_paid,
-        total_months
+        total_months, rental_scenario
     )
 
     # Create and display plots
@@ -137,12 +160,16 @@ def simulate_scenario(
         monthly_equity, monthly_invest_monthly_rate
     )
 
-    # Display monthly payments
+    # Calculate monthly mortgage payment for display
+    monthly_payment = property_costs.calculate_monthly_payment(mortgage_rate_annual)
+    
+    # Display monthly payments with the calculated savings
     display_monthly_payments(
         property_costs,
-        rental_scenario,
-        tax_rate,
-        months_live_in,
-        months_rent_out,
-        rent_while_out
+        monthly_payment,
+        monthly_savings_buy,
+        monthly_savings_rent,
+        rent_while_out,
+        mortgage_rate_annual,
+        rent_collected_home
     ) 

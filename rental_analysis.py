@@ -2,28 +2,42 @@ from financial_utils import project_rent_values
 
 class RentalScenario:
     def __init__(self, property_costs, months_live_in, months_rent_out,
-                 rent_while_out, rent_collected_home, rent_growth_annual):
-        self.property_costs = property_costs
+                 rent_while_out, rent_collected_home, rent_growth_annual, rent_current):
         self.months_live_in = months_live_in
         self.months_rent_out = months_rent_out
-        self.total_months = months_live_in + months_rent_out
-        self.rent_while_out = rent_while_out if months_rent_out > 0 else 0
-        self.rent_collected_home = rent_collected_home if months_rent_out > 0 else 0
+        self.rent_while_out = rent_while_out
+        self.rent_collected_home = rent_collected_home
+        self.rent_growth_annual = rent_growth_annual
         
-        # Project rent values for comparison scenario - this should always be calculated
-        # even if not renting out, as it represents what you would pay in rent if you didn't buy
-        self.monthly_rent_if_no_buy = project_rent_values(
-            rent_while_out, self.total_months, rent_growth_annual)
+        # Calculate all rent progressions
+        total_months = months_live_in + months_rent_out
+        
+        # 1. Calculate rent progression if not buying (starts from rent_current)
+        self.monthly_rent_if_no_buy = []
+        for month in range(total_months):
+            month_fraction = month / 12
+            growth_factor = (1 + rent_growth_annual) ** month_fraction
+            self.monthly_rent_if_no_buy.append(rent_current * growth_factor)
+        
+        # 2. Calculate rental income progression (starts from rent_collected_home)
+        self.monthly_rent_collected = []
+        for month in range(total_months):
+            month_fraction = month / 12
+            growth_factor = (1 + rent_growth_annual) ** month_fraction
+            self.monthly_rent_collected.append(rent_collected_home * growth_factor)
+            
+        # 3. Calculate rent paid while out progression (starts from rent_while_out)
+        self.monthly_rent_while_out = []
+        for month in range(total_months):
+            month_fraction = month / 12
+            growth_factor = (1 + rent_growth_annual) ** month_fraction
+            self.monthly_rent_while_out.append(rent_while_out * growth_factor)
 
     def calculate_monthly_cashflow(self, month):
-        """Calculate monthly cash flow for given month."""
-        monthly_costs = self.property_costs.get_monthly_costs()
-        
-        if month <= self.months_live_in or self.months_rent_out == 0:
-            # Living in period or never renting out
-            return -monthly_costs
+        # During living in period, only consider the opportunity cost of rent
+        if month <= self.months_live_in:
+            return -self.monthly_rent_if_no_buy[month-1]
         else:
-            # Renting out period
-            rental_income = self.rent_collected_home
-            rent_paid = self.rent_while_out
-            return rental_income - monthly_costs - rent_paid
+            # After moving out, consider both collected rent and paid rent with growth
+            rent_month_idx = month - 1
+            return self.monthly_rent_collected[rent_month_idx] - self.monthly_rent_while_out[rent_month_idx]

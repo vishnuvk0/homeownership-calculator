@@ -25,7 +25,7 @@ def main():
     closing_costs_sell_pct = input_with_default("Enter the selling closing costs percentage (e.g. 0.06 for 6%)", "0.06")
 
     # Rent details
-    rent_current = input_with_default("Enter the current monthly rent (e.g. 2400)", "2400")
+    rent_current = input_with_default("Enter your current monthly rent (e.g. 2400)", "2400")
     rent_growth_annual = input_with_default("Enter the annual rent growth rate (e.g. 0.04 for 4%)", "0.04")
 
     # Investment rates

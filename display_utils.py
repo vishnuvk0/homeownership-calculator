@@ -7,7 +7,8 @@ def display_results(
     down_payment, closing_costs_buy, total_monthly_paid, total_tax_savings,
     net_cost_after_selling, total_rent_no_buy, fv_monthly_invest,
     fv_invest_if_rent, owning_effective_net, renting_effective_net,
-    monthly_principal_paid, monthly_interest_paid, total_months
+    monthly_principal_paid, monthly_interest_paid, total_months,
+    rental_scenario
 ):
     print("\n--------------- SUMMARY AFTER PERIOD ---------------")
     print(f"Home value after {total_months/12:.1f} years: ${home_value_after:,.2f}")
@@ -23,7 +24,14 @@ def display_results(
     print(f"Net cost after selling: ${net_cost_after_selling:,.2f}")
 
     print("\n--- Rent Scenario (No Buy) ---")
-    print(f"Total rent paid: ${total_rent_no_buy:,.2f}")
+    print(f"Total rent paid (if never bought): ${total_rent_no_buy:,.2f}")
+    
+    # Display rent progression
+    print("\nRent Progression (Annual):")
+    current_rent = rental_scenario.monthly_rent_if_no_buy[0]
+    for year in range(int(total_months/12)):
+        print(f"Year {year+1}: ${current_rent:,.2f}/month")
+        current_rent *= (1 + rental_scenario.rent_growth_annual)
 
     print("\n--- Investment Calculations ---")
     print(f"Value of monthly difference investment: ${fv_monthly_invest:,.2f}")
@@ -106,59 +114,45 @@ def create_comparison_plots(
 
 def display_monthly_payments(
     property_costs,
-    rental_scenario,
-    tax_rate,
-    months_live_in,
-    months_rent_out,
-    rent_while_out
+    monthly_payment,
+    monthly_savings_buy,
+    monthly_savings_rent,
+    rent_while_out,
+    mortgage_rate_annual,
+    rent_collected_home
 ):
+    """Display the monthly payment breakdown."""
     print("\n--------------- MONTHLY PAYMENT BREAKDOWN ---------------")
     
     monthly_principal, monthly_interest = property_costs.calculate_monthly_mortgage_split(
-        property_costs.loan_amount, property_costs.mortgage_rate_annual)
+        property_costs.loan_amount, mortgage_rate_annual)
     
-    monthly_tax_insurance = (property_costs.property_tax + 
+    monthly_tax_insurance = (property_costs.property_tax_annual/12 + 
                            property_costs.insurance_annual/12)
     monthly_maintenance = property_costs.maintenance_annual/12
     monthly_hoa = property_costs.hoa_monthly
-    
-    monthly_deductible = monthly_interest + property_costs.property_tax
-    monthly_tax_savings = monthly_deductible * tax_rate
 
-    total_monthly = (monthly_principal + monthly_interest + monthly_tax_insurance + 
-                    monthly_maintenance + monthly_hoa - monthly_tax_savings)
-
-    print("\nWHILE LIVING IN THE HOUSE (First {} months):".format(months_live_in))
     payment_breakdown = [
         ["Principal", f"${monthly_principal:,.2f}"],
         ["Interest", f"${monthly_interest:,.2f}"],
         ["Property Tax + Insurance", f"${monthly_tax_insurance:,.2f}"],
         ["Maintenance", f"${monthly_maintenance:,.2f}"],
         ["HOA", f"${monthly_hoa:,.2f}"],
-        ["Tax Savings", f"-${monthly_tax_savings:,.2f}"],
         ["", ""],
-        ["Total Monthly Payment", f"${total_monthly:,.2f}"]
+        ["Total Monthly Payment", f"${monthly_payment:,.2f}"]
     ]
-    print(tabulate(payment_breakdown, tablefmt="pretty"))
-
-    if months_rent_out > 0:
-        print("\nAFTER MOVING OUT (Next {} months):".format(months_rent_out))
-        rental_income = rental_scenario.rent_collected_home
-        new_payment_breakdown = [
-            ["Original Monthly Payment", f"${total_monthly:,.2f}"],
-            ["Rental Income", f"-${rental_income:,.2f}"],
-            ["Your New Rent Payment", f"${rent_while_out:,.2f}"],
+    
+    if monthly_savings_buy != 0:
+        payment_breakdown.append(["Monthly Savings vs Renting", f"${monthly_savings_buy:,.2f}"])
+    
+    if rent_while_out > 0:
+        net_cashflow = rent_collected_home - monthly_payment - rent_while_out
+        payment_breakdown.extend([
             ["", ""],
-            ["Net Monthly Payment", 
-             f"${total_monthly - rental_income + rent_while_out:,.2f}"]
-        ]
-        print(tabulate(new_payment_breakdown, tablefmt="pretty"))
-
-    print("\nIF RENTING ONLY:")
-    initial_rent = rental_scenario.monthly_rent_if_no_buy[0]
-    final_rent = rental_scenario.monthly_rent_if_no_buy[-1]
-    rent_breakdown = [
-        ["Initial Monthly Rent", f"${initial_rent:,.2f}"],
-        ["Final Monthly Rent", f"${final_rent:,.2f}"]
-    ]
-    print(tabulate(rent_breakdown, tablefmt="pretty")) 
+            ["When Renting Out:", ""],
+            ["Rent Collected", f"${rent_collected_home:,.2f}"],
+            ["Your Rent Payment", f"-${rent_while_out:,.2f}"],
+            ["Net Monthly Cash Flow", f"${net_cashflow:,.2f}"]
+        ])
+    
+    print(tabulate(payment_breakdown, tablefmt="pretty")) 
