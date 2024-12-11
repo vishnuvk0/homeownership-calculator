@@ -1,3 +1,4 @@
+#main entry point for app
 from simulation import simulate_scenario
 
 def input_with_default(prompt, default, value_type=float):
