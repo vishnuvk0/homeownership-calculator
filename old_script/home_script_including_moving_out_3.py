@@ -56,12 +56,13 @@ def simulate_scenario(
     insurance_monthly = insurance_annual / 12
 
     # Rent changes each year for scenario where we would have just rented:
-    # We'll assume the user would rent at the current rent rate if they never bought.
     monthly_rent_if_no_buy = []
+    current_rent = rent_current
     for m in range(1, total_months+1):
-        year = math.ceil(m/12)
-        current_rent_no_buy = rent_current * ((1 + rent_growth_annual)**(year-1))
-        monthly_rent_if_no_buy.append(current_rent_no_buy)
+        # Only increase rent at the start of each new year (when m-1 is divisible by 12)
+        if m > 1 and (m-1) % 12 == 0:
+            current_rent *= (1 + rent_growth_annual)
+        monthly_rent_if_no_buy.append(current_rent)
 
     # Prepare to simulate month-by-month
     monthly_interest_paid = []
