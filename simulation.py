@@ -1,8 +1,6 @@
 from financial_utils import (future_value, calculate_future_monthly_investments)
 from property_analysis import PropertyCosts
 from rental_analysis import RentalScenario
-from display_utils import (display_results, create_comparison_plots, 
-                         display_monthly_payments)
 
 def simulate_scenario(
     home_price,
@@ -106,13 +104,13 @@ def simulate_scenario(
         current_equity = home_value_now - remaining_principal
 
         # Store monthly values
-        monthly_interest_paid.append(interest_paid)
-        monthly_principal_paid.append(principal_paid)
-        monthly_total_home_cost.append(month_home_cost)
-        monthly_tax_savings.append(tax_saving_this_month)
-        monthly_investment_contribution.append(invest_contribution)
-        monthly_home_value.append(home_value_now)
-        monthly_equity.append(current_equity)
+        monthly_interest_paid.append(float(interest_paid))
+        monthly_principal_paid.append(float(principal_paid))
+        monthly_total_home_cost.append(float(month_home_cost))
+        monthly_tax_savings.append(float(tax_saving_this_month))
+        monthly_investment_contribution.append(float(invest_contribution))
+        monthly_home_value.append(float(home_value_now))
+        monthly_equity.append(float(current_equity))
 
     # Calculate final results
     home_value_after = monthly_home_value[-1]
@@ -143,44 +141,57 @@ def simulate_scenario(
     owning_effective_net = fv_monthly_invest - net_cost_after_selling
     renting_effective_net = fv_invest_if_rent - total_rent_no_buy
 
-    # Display results
-    display_results(
-        home_value_after, remaining_principal, selling_costs, final_equity,
-        property_costs.down_payment, closing_costs_buy, total_monthly_paid,
-        total_tax_savings, net_cost_after_selling, total_rent_no_buy,
-        fv_monthly_invest, fv_invest_if_rent, owning_effective_net,
-        renting_effective_net, monthly_principal_paid, monthly_interest_paid,
-        total_months, rental_scenario
-    )
-
-    # Create and display plots
-    create_comparison_plots(
-        total_months, rental_scenario.monthly_rent_if_no_buy,
-        monthly_total_home_cost, monthly_investment_contribution,
-        monthly_equity, monthly_invest_monthly_rate
-    )
-
-    # Calculate monthly mortgage payment for display
+    # Calculate monthly mortgage payment
     monthly_payment = property_costs.calculate_monthly_payment(mortgage_rate_annual)
-    
-    # Display monthly payments with the calculated average costs
-    display_monthly_payments(
-        property_costs,
-        monthly_payment,
-        monthly_savings_buy,
-        monthly_savings_rent,
-        rent_while_out,
-        mortgage_rate_annual,
-        rent_collected_home,
-        home_price,
-        closing_costs_buy_pct,
-        total_monthly_paid,
-        months_rent_out,
-        home_value_after,
-        closing_costs_sell_pct,
-        final_equity,
-        total_months,
-        total_rent_no_buy,
-        fv_invest_if_rent,
-        property_costs.down_payment
-    ) 
+
+    # Prepare amortization data
+    amortization_data = []
+    for i in range(total_months):
+        year = (i // 12) + 1
+        if i % 12 == 0:  # Only add yearly data
+            amortization_data.append({
+                "year": year,
+                "principal_paid": sum(monthly_principal_paid[i:i+12]),
+                "interest_paid": sum(monthly_interest_paid[i:i+12])
+            })
+
+    # Return results as a dictionary
+    return {
+        "summary": {
+            "home_value_after": float(home_value_after),
+            "remaining_principal": float(remaining_principal),
+            "selling_costs": float(selling_costs),
+            "final_equity": float(final_equity)
+        },
+        "costs": {
+            "down_payment": float(property_costs.down_payment),
+            "closing_costs_buy": float(closing_costs_buy),
+            "total_monthly_paid": float(total_monthly_paid),
+            "total_tax_savings": float(total_tax_savings),
+            "net_cost_after_selling": float(net_cost_after_selling)
+        },
+        "rent_comparison": {
+            "total_rent_no_buy": float(total_rent_no_buy),
+            "monthly_payment": float(monthly_payment)
+        },
+        "investment_analysis": {
+            "monthly_investment_value": float(fv_monthly_invest),
+            "rent_investment_value": float(fv_invest_if_rent)
+        },
+        "final_comparison": {
+            "owning_effective_net": float(owning_effective_net),
+            "renting_effective_net": float(renting_effective_net),
+            "recommendation": "Buying and then renting out is more favorable" if owning_effective_net > renting_effective_net else "Renting the entire period is more favorable"
+        },
+        "monthly_data": {
+            "interest_paid": [float(x) for x in monthly_interest_paid],
+            "principal_paid": [float(x) for x in monthly_principal_paid],
+            "total_home_cost": [float(x) for x in monthly_total_home_cost],
+            "tax_savings": [float(x) for x in monthly_tax_savings],
+            "investment_contribution": [float(x) for x in monthly_investment_contribution],
+            "home_value": [float(x) for x in monthly_home_value],
+            "equity": [float(x) for x in monthly_equity],
+            "rent_if_no_buy": [float(x) for x in rental_scenario.monthly_rent_if_no_buy]
+        },
+        "amortization": amortization_data
+    }

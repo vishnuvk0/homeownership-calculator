@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Ownership Calculator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .form-group { margin-bottom: 1rem; }
+        .results { margin-top: 2rem; }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Home Ownership Calculator</h1>
+        
+        <form id="simulationForm">
+            <div class="row">
+                <div class="col-md-6">
+                    <h3>Property Details</h3>
+                    <div class="form-group">
+                        <label>Home Price</label>
+                        <input type="number" class="form-control" name="home_price" value="900000">
+                    </div>
+                    <div class="form-group">
+                        <label>Down Payment Percentage (e.g., 0.20 for 20%)</label>
+                        <input type="number" step="0.01" class="form-control" name="down_payment_pct" value="0.20">
+                    </div>
+                    <div class="form-group">
+                        <label>Annual Mortgage Rate (e.g., 0.06 for 6%)</label>
+                        <input type="number" step="0.001" class="form-control" name="mortgage_rate_annual" value="0.06">
+                    </div>
+                    <div class="form-group">
+                        <label>Mortgage Term (years)</label>
+                        <input type="number" class="form-control" name="mortgage_term_years" value="30">
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <h3>Property Costs</h3>
+                    <div class="form-group">
+                        <label>Annual Property Tax Rate (e.g., 0.011 for 1.1%)</label>
+                        <input type="number" step="0.001" class="form-control" name="property_tax_rate_annual" value="0.011">
+                    </div>
+                    <div class="form-group">
+                        <label>Annual Maintenance Cost</label>
+                        <input type="number" class="form-control" name="maintenance_annual" value="5000">
+                    </div>
+                    <div class="form-group">
+                        <label>Annual Insurance Cost</label>
+                        <input type="number" class="form-control" name="insurance_annual" value="3500">
+                    </div>
+                    <div class="form-group">
+                        <label>Monthly HOA Fee</label>
+                        <input type="number" class="form-control" name="hoa_monthly" value="300">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h3>Transaction Costs</h3>
+                    <div class="form-group">
+                        <label>Buyer Closing Costs Percentage (e.g., 0.04 for 4%)</label>
+                        <input type="number" step="0.01" class="form-control" name="closing_costs_buy_pct" value="0.04">
+                    </div>
+                    <div class="form-group">
+                        <label>Seller Closing Costs Percentage (e.g., 0.06 for 6%)</label>
+                        <input type="number" step="0.01" class="form-control" name="closing_costs_sell_pct" value="0.06">
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <h3>Rent Details</h3>
+                    <div class="form-group">
+                        <label>Current Monthly Rent</label>
+                        <input type="number" class="form-control" name="rent_current" value="2400">
+                    </div>
+                    <div class="form-group">
+                        <label>Annual Rent Growth Rate (e.g., 0.04 for 4%)</label>
+                        <input type="number" step="0.01" class="form-control" name="rent_growth_annual" value="0.04">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h3>Investment Rates</h3>
+                    <div class="form-group">
+                        <label>Alternative Investment Growth Rate (e.g., 0.16 for 16%)</label>
+                        <input type="number" step="0.01" class="form-control" name="alt_invest_growth_annual" value="0.16">
+                    </div>
+                    <div class="form-group">
+                        <label>Monthly Investment Growth Rate (e.g., 0.15 for 15%)</label>
+                        <input type="number" step="0.01" class="form-control" name="monthly_invest_growth_annual" value="0.15">
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <h3>Market Conditions</h3>
+                    <div class="form-group">
+                        <label>Home Appreciation Rate (e.g., 0.08 for 8%)</label>
+                        <input type="number" step="0.01" class="form-control" name="home_appreciation_annual" value="0.08">
+                    </div>
+                    <div class="form-group">
+                        <label>Tax Rate (e.g., 0.30 for 30%)</label>
+                        <input type="number" step="0.01" class="form-control" name="tax_rate" value="0.30">
+                    </div>
+                    <div class="form-group">
+                        <label>Property Tax Deduction Cap</label>
+                        <input type="number" class="form-control" name="property_tax_deduction_cap" value="10000">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h3>Living Situation</h3>
+                    <div class="form-group">
+                        <label>Months to Live in Home</label>
+                        <input type="number" class="form-control" name="months_live_in" value="36">
+                    </div>
+                    <div class="form-group">
+                        <label>Months to Rent Out Home</label>
+                        <input type="number" class="form-control" name="months_rent_out" value="36">
+                    </div>
+                    <div class="form-group">
+                        <label>Monthly Rent While Out</label>
+                        <input type="number" class="form-control" name="rent_while_out" value="2500">
+                    </div>
+                    <div class="form-group">
+                        <label>Monthly Rent Collected from Home</label>
+                        <input type="number" class="form-control" name="rent_collected_home" value="3500">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-4">Calculate</button>
+        </form>
+
+        <div id="results" class="results">
+            <!-- Results will be displayed here -->
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(value);
+        }
+
+        function formatPercentage(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'percent',
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1
+            }).format(value);
+        }
+
+        function displayResults(result) {
+            const resultsDiv = document.getElementById('results');
+            
+            // Create the results HTML
+            let html = `
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">Final Recommendation</h3>
+                    </div>
+                    <div class="card-body">
+                        <h4>${result.final_comparison.recommendation}</h4>
+                        <p>Owning Net Position: ${formatCurrency(result.final_comparison.owning_effective_net)}</p>
+                        <p>Renting Net Position: ${formatCurrency(result.final_comparison.renting_effective_net)}</p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h3 class="mb-0">Property Summary</h3>
+                            </div>
+                            <div class="card-body">
+                                <p>Final Home Value: ${formatCurrency(result.summary.home_value_after)}</p>
+                                <p>Remaining Principal: ${formatCurrency(result.summary.remaining_principal)}</p>
+                                <p>Selling Costs: ${formatCurrency(result.summary.selling_costs)}</p>
+                                <p>Final Equity: ${formatCurrency(result.summary.final_equity)}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h3 class="mb-0">Cost Analysis</h3>
+                            </div>
+                            <div class="card-body">
+                                <p>Down Payment: ${formatCurrency(result.costs.down_payment)}</p>
+                                <p>Closing Costs: ${formatCurrency(result.costs.closing_costs_buy)}</p>
+                                <p>Total Monthly Paid: ${formatCurrency(result.costs.total_monthly_paid)}</p>
+                                <p>Total Tax Savings: ${formatCurrency(result.costs.total_tax_savings)}</p>
+                                <p>Net Cost After Selling: ${formatCurrency(result.costs.net_cost_after_selling)}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h3 class="mb-0">Rent Comparison</h3>
+                            </div>
+                            <div class="card-body">
+                                <p>Total Rent (if never bought): ${formatCurrency(result.rent_comparison.total_rent_no_buy)}</p>
+                                <p>Monthly Mortgage Payment: ${formatCurrency(result.rent_comparison.monthly_payment)}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h3 class="mb-0">Investment Analysis</h3>
+                            </div>
+                            <div class="card-body">
+                                <p>Monthly Investment Value: ${formatCurrency(result.investment_analysis.monthly_investment_value)}</p>
+                                <p>Rent Investment Value: ${formatCurrency(result.investment_analysis.rent_investment_value)}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3 class="mb-0">Amortization Schedule</h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Year</th>
+                                    <th>Principal Paid</th>
+                                    <th>Interest Paid</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${result.amortization.map(year => `
+                                    <tr>
+                                        <td>${year.year}</td>
+                                        <td>${formatCurrency(year.principal_paid)}</td>
+                                        <td>${formatCurrency(year.interest_paid)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3 class="mb-0">Monthly Trends</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="monthlyTrendsChart"></canvas>
+                    </div>
+                </div>
+            `;
+
+            resultsDiv.innerHTML = html;
+
+            // Create the monthly trends chart
+            const ctx = document.getElementById('monthlyTrendsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: result.monthly_data.home_value.length}, (_, i) => i + 1),
+                    datasets: [
+                        {
+                            label: 'Home Value',
+                            data: result.monthly_data.home_value,
+                            borderColor: 'rgb(75, 192, 192)',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.1,
+                            yAxisID: 'y-home-value'
+                        },
+                        {
+                            label: 'Equity',
+                            data: result.monthly_data.equity,
+                            borderColor: 'rgb(153, 102, 255)',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.1,
+                            yAxisID: 'y-home-value'
+                        },
+                        {
+                            label: 'Monthly Cost',
+                            data: result.monthly_data.total_home_cost,
+                            borderColor: 'rgb(255, 99, 132)',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.1,
+                            yAxisID: 'y-monthly'
+                        },
+                        {
+                            label: 'Monthly Rent if No Buy',
+                            data: result.monthly_data.rent_if_no_buy,
+                            borderColor: 'rgb(255, 159, 64)',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.1,
+                            yAxisID: 'y-monthly'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    stacked: false,
+                    scales: {
+                        'y-home-value': {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Home Value & Equity'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        },
+                        'y-monthly': {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Monthly Costs'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Month'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return 'Month ' + (value + 1);
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Home Value, Equity, and Monthly Costs Over Time'
+                        }
+                    }
+                }
+            });
+        }
+
+        document.getElementById('simulationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = {};
+            
+            // Convert form data to appropriate numeric types
+            for (let [key, value] of formData.entries()) {
+                // Convert empty strings to default values
+                if (value === '') {
+                    switch(key) {
+                        case 'home_price': value = '900000'; break;
+                        case 'down_payment_pct': value = '0.20'; break;
+                        case 'mortgage_rate_annual': value = '0.06'; break;
+                        case 'mortgage_term_years': value = '30'; break;
+                        case 'property_tax_rate_annual': value = '0.011'; break;
+                        case 'maintenance_annual': value = '5000'; break;
+                        case 'insurance_annual': value = '3500'; break;
+                        case 'hoa_monthly': value = '300'; break;
+                        case 'closing_costs_buy_pct': value = '0.04'; break;
+                        case 'closing_costs_sell_pct': value = '0.06'; break;
+                        case 'rent_current': value = '2400'; break;
+                        case 'rent_growth_annual': value = '0.04'; break;
+                        case 'alt_invest_growth_annual': value = '0.12'; break;
+                        case 'monthly_invest_growth_annual': value = '0.12'; break;
+                        case 'home_appreciation_annual': value = '0.08'; break;
+                        case 'tax_rate': value = '0.30'; break;
+                        case 'property_tax_deduction_cap': value = '10000'; break;
+                        case 'months_live_in': value = '36'; break;
+                        case 'months_rent_out': value = '36'; break;
+                        case 'rent_while_out': value = '2500'; break;
+                        case 'rent_collected_home': value = '3500'; break;
+                    }
+                }
+                
+                // Convert to number
+                data[key] = Number(value);
+                
+                // Validate the number
+                if (isNaN(data[key])) {
+                    throw new Error(`Invalid value for ${key}: ${value}`);
+                }
+            }
+            
+            try {
+                const response = await fetch('/api/simulate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                if (result.error) {
+                    document.getElementById('results').innerHTML = `
+                        <div class="alert alert-danger">
+                            <h4 class="alert-heading">Error</h4>
+                            <p>${result.error}</p>
+                        </div>
+                    `;
+                } else {
+                    displayResults(result);
+                }
+            } catch (error) {
+                document.getElementById('results').innerHTML = `
+                    <div class="alert alert-danger">
+                        <h4 class="alert-heading">Error</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html> 
